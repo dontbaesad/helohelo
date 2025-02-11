@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tweetly</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 600px;
+            margin: auto;
+            background-color: #ffe6f2;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .logo {
+            width: 100px;
+            margin-bottom: 10px;
+        }
+        input, textarea {
+            width: 90%;
+            padding: 8px;
+            margin-top: 10px;
+            border: 2px solid #ffc2d1;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #357ab8;
+        }
+        .post {
+            border: 1px solid #ddd;
+            background: #fff0f5;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 10px;
+            text-align: left;
+            position: relative;
+        }
+        .logout {
+            position: fixed;
+            left: 10px;
+            top: 10px;
+            padding: 10px;
+            background: red;
+            color: white;
+            cursor: pointer;
+            display: none;
+            border-radius: 5px;
+        }
+        .stars {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .star {
+            font-size: 20px;
+            color: gray;
+        }
+        .star.selected {
+            color: gold;
+        }
+        .delete-btn {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<button class="logout" onclick="logout()">Log Out</button>
+
+<div class="container">
+    <img src="vecteezy_pink-cattleya-design_6618138.jpg" class="logo" alt="Logo">
+    <h2>💬 Tweetly 💬</h2>
+
+    <div id="authSection">
+        <h3>Sign Up</h3>
+        <input type="text" id="signupUser" placeholder="Create a Username">
+        <button onclick="signup()">Sign Up</button>
+
+        <h3>Log In</h3>
+        <input type="text" id="loginUser" placeholder="Enter Username">
+        <button onclick="login()">Log In</button>
+    </div>
+
+    <div id="postSection" style="display:none;">
+        <h3>Post Something</h3>
+        <textarea id="postText" placeholder="Write something..."></textarea>
+        <input type="file" id="postImage">
+        <button onclick="addPost()">Post</button>
+        
+        <h3>Posts</h3>
+        <div id="posts"></div>
+    </div>
+</div>
+
+<script>
+    function signup() {
+        let newUser = document.getElementById("signupUser").value.trim();
+        let users = JSON.parse(localStorage.getItem("users")) || [];
+
+        if (newUser === "") {
+            alert("Username cannot be empty!");
+            return;
+        }
+        if (users.includes(newUser)) {
+            alert("Username already taken. Try another.");
+            return;
+        }
+
+        users.push(newUser);
+        localStorage.setItem("users", JSON.stringify(users));
+        alert("Sign Up Successful! Now log in.");
+        document.getElementById("signupUser").value = "";
+    }
+
+    function login() {
+        let user = document.getElementById("loginUser").value.trim();
+        let users = JSON.parse(localStorage.getItem("users")) || [];
+
+        if (users.includes(user)) {
+            localStorage.setItem("loggedInUser", user);
+            document.getElementById("authSection").style.display = "none";
+            document.getElementById("postSection").style.display = "block";
+            document.querySelector(".logout").style.display = "block";
+        } else {
+            alert("User not found! Please sign up.");
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("loggedInUser");
+        location.reload();
+    }
+
+    function addPost() {
+        let text = document.getElementById("postText").value;
+        let image = document.getElementById("postImage").files[0];
+        let user = localStorage.getItem("loggedInUser");
+
+        if (text.trim() === "" && !image) return;
+
+        let postDiv = document.createElement("div");
+        postDiv.className = "post";
+        postDiv.setAttribute("data-user", user);
+
+        let date = new Date().toLocaleString();
+        postDiv.innerHTML = `<strong>${user}</strong> - <em>${date}</em><br>${text}<br>`;
+
+        if (image) {
+            let img = document.createElement("img");
+            img.src = URL.createObjectURL(image);
+            img.style.maxWidth = "100%";
+            postDiv.appendChild(img);
+        }
+
+        let starsDiv = document.createElement("div");
+        starsDiv.className = "stars";
+        for (let i = 1; i <= 5; i++) {
+            let star = document.createElement("span");
+            star.className = "star";
+            star.innerHTML = "★";
+            star.onclick = function() { ratePost(this, i); };
+            starsDiv.appendChild(star);
+        }
+        postDiv.appendChild(starsDiv);
+
+        let deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.innerText = "Hapus";
+        deleteBtn.onclick = function () { deletePost(postDiv); };
+        postDiv.appendChild(deleteBtn);
+
+        document.getElementById("posts").prepend(postDiv);
+        document.getElementById("postText").value = "";
+        document.getElementById("postImage").value = "";
+    }
+
+    function ratePost(star, rating) {
+        let stars = star.parentNode.querySelectorAll(".star");
+        stars.forEach((s, index) => {
+            s.classList.toggle("selected", index < rating);
+        });
+    }
+</script>
+
+</body>
+</html>
